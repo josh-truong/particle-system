@@ -38,8 +38,10 @@ add_subdirectory(lib/glfw)
 
 list(APPEND SOURCES
     src/main.cpp
+    src/ParticleSystem.h
+    src/ParticleSystem.cpp
 )
-add_executable(${PROJECT_NAME} MACOSX_BUNDLE WIN32 ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES})
 
 # OS specific
 if(UNIX)
@@ -54,6 +56,7 @@ endif()
 # Include dirs
 target_include_directories(${PROJECT_NAME}
     PUBLIC lib/glfw/include/
+    PUBLIC lib/glfw/deps/
 )
 
 
