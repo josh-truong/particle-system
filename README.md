@@ -15,3 +15,16 @@
 - Vertex buffer data
 ![image](resources/images/Vertex_buffer_data.png)
   - Using this map, we can tell opengl how to interpret the vertex data (per vertex attribute)
+- Vertex Array Object (VAO)
+![image](resources/images/vao_description.png)
+![image](resources/images/vao_diagram.png)
+- Element Buffer Objects (EBO)
+![image](resources/images/EBO_diagram.png)
+  - Reduces the overlap on the vertices specified. For example, drawing a rectangle using 2 triangles will use 6 vertices instead of 4 since 2 overlap each other.
+  - EBO is a buffer that stores indices that tells OpenGL what vertices to draw
+
+- Shaders
+  - GLSL
+    - Supports int, float, double, uint, bool, vectors, matrices
+    - Vectors
+      ![image](resources/images/vector_types.png)
