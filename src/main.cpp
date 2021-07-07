@@ -56,36 +56,40 @@ const char *fragmentShaderSource =
 
 int main(int argc, const char** argv)
 {
-    GLFWwindow *window;
-    int width, height;
-
-    glfwSetErrorCallback(error_callback);
-
     if(!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
         return -1;
     }
 
-
-
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(640, 480, "Particle System", NULL, NULL);
+    GLFWwindow *window = window = glfwCreateWindow(640, 480, "Particle System", NULL, NULL);    
     if (!window) {
         fprintf(stderr, "Failed to open GLFW window\n");
         glfwTerminate();
         return -1;
     }
+    int width, height;
+    
+    glfwMakeContextCurrent(window);
+    glfwSetErrorCallback(error_callback);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+
+
+    // glfwSwapInterval(1);
+    // Missing glad
+
+    // Build and compile shader program
+    // -----------------------------
     /* Vertex Shader */
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
-
-    /* Compilation check: vertex shader */
+    /* Check for compilation error for vertex shader */
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -94,27 +98,25 @@ int main(int argc, const char** argv)
         printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
     }
 
+
     /* Fragment Shader */
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
-    
-    /* Compilation check: fragment shader */
+    /* Check for compilation error for fragment shader */
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if(!success) {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
     }
 
-    /* Link shaders using shader program */
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
+
+    /* Link shaders */
+    unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-
-    /* Compilation check: linking to the program */
+    /* Check for linking errors */
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if(!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
@@ -125,48 +127,64 @@ int main(int argc, const char** argv)
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
-    };
 
+    // Setup vertex data, buffer, and configure vertex attributes
+    // ------------------------------------------
+    float vertices[] = {
+         0.5f,  0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+        -0.5f, -0.5f, 0.0f,
+        -0.5f,  0.5f, 0.0f
+    };
+    unsigned int indices[] = {
+        0, 1, 3,
+        1, 2, 3
+    };
+    
     /* Vertex Buffer Object 
         Vertex data is now stored within the memory of the GPU and managed by variable VBO
     */
-    unsigned int VBO;
+    unsigned int VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    // 0. copy our vertices array in a buffer for OpenGl to use
+    glGenBuffers(1, &EBO);
+
+    // 0. Bind VAO
+    glBindVertexArray(VAO);
+
+    // 1. bind and set vertex buffers
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    /*  1. Set the vertex attributes pointers
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    /*  2. Set the vertex attributes pointers
         Input data is now sent to GPU and instructed the GPU how it should process the vertex
         data within a vertex and fragment shader. But OpenGL does not know how to interpret
         the vertex data in memory and how to connect the vertex data to the shader's attribute.
     */
-   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-   glEnableVertexAttribArray(0);
-    /* 
-        Result of linking shaders is a program object.
-        Every shader and rendering call after glUseProgram will now use this program object.
-    */
-    glUseProgram(shaderProgram);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
-    
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-    
+    // Unbind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // Unbind VAO
+    glBindVertexArray(0);
 
-    
     while(!glfwWindowShouldClose(window)) {
         // Render commands
         glClearColor(0.188f, 0.188f, 0.188f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
+        
+        /* 
+            Result of linking shaders is a program object.
+            Every shader and rendering call after glUseProgram will now use this program object.
+        */
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        // glDrawArrays(GL_TRIANGLES, 0, 3);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
         // Swap front buffer w/ back buffer
@@ -174,6 +192,11 @@ int main(int argc, const char** argv)
         // Checks if any events has been triggered like key press
         glfwPollEvents();
     }
+
+    // Deallocate resources
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
     glfwTerminate();
