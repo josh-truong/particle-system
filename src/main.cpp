@@ -1,134 +1,180 @@
-#include <GL/glu.h>
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+
+#include <linmath.h>
 #include <cstdio>
 
-void controls(GLFWwindow* window, int key, int scancode, int action, int mods)
+void error_callback(int error, const char* description)
 {
-    if(action == GLFW_PRESS)
-        if(key == GLFW_KEY_ESCAPE)
-            glfwSetWindowShouldClose(window, GL_TRUE);
+    fprintf(stderr, "Error: %s\n", description);
 }
 
-GLFWwindow* initWindow(const int resX, const int resY)
+void key_callback (GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if( action != GLFW_PRESS )
+        return;
+
+    switch(key) {
+        case GLFW_KEY_ESCAPE:
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+            break;
+        default:
+            return;
+    }
+}
+
+/** framebuffer_size_callback is a callback function for glfwSetFramebufferSizeCallback.
+ * This callback function should be called the moment a user resizes the window and the
+ * viewport needs to be adjusted.
+ * 
+*/
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+    /* 
+        glViewport: Sends to open opengl the size of our rendering window in
+        order to display the data and coordinates with respect to the window.
+    */
+    glViewport(0, 0, width, height);
+}
+
+const char *vertexShaderSource =
+"#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+const char *fragmentShaderSource =
+"#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"}\0";
+
+
+int main(int argc, const char** argv)
 {
-    if(!glfwInit())
-    {
+    GLFWwindow *window;
+    int width, height;
+
+    glfwSetErrorCallback(error_callback);
+
+    if(!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
-        return NULL;
+        return -1;
     }
-    glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 
-    // Open a window and create its OpenGL context
-    GLFWwindow* window = glfwCreateWindow(resX, resY, "TEST", NULL, NULL);
 
-    if(window == NULL)
-    {
-        fprintf(stderr, "Failed to open GLFW window.\n");
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    window = glfwCreateWindow(640, 480, "Particle System", NULL, NULL);
+    if (!window) {
+        fprintf(stderr, "Failed to open GLFW window\n");
         glfwTerminate();
-        return NULL;
+        return -1;
     }
 
+    /* Vertex Shader */
+    unsigned int vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    /* Compilation check: vertex shader */
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if(!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
+    }
+
+    /* Fragment Shader */
+    unsigned int fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+    
+    /* Compilation check: fragment shader */
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if(!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
+    }
+
+    /* Link shaders using shader program */
+    unsigned int shaderProgram;
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    /* Compilation check: linking to the program */
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if(!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        printf("ERROR::SHADER:LINKING::COMPILATION_FAILED\n%s\n", infoLog);
+    }
+
+    /* Delete Shader objects after linking to program */
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
+    };
+
+    /* Vertex Buffer Object 
+        Vertex data is now stored within the memory of the GPU and managed by variable VBO
+    */
+    unsigned int VBO;
+    glGenBuffers(1, &VBO);
+    // 0. copy our vertices array in a buffer for OpenGl to use
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    /*  1. Set the vertex attributes pointers
+        Input data is now sent to GPU and instructed the GPU how it should process the vertex
+        data within a vertex and fragment shader. But OpenGL does not know how to interpret
+        the vertex data in memory and how to connect the vertex data to the shader's attribute.
+    */
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+   glEnableVertexAttribArray(0);
+    /* 
+        Result of linking shaders is a program object.
+        Every shader and rendering call after glUseProgram will now use this program object.
+    */
+    glUseProgram(shaderProgram);
+
+    
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwMakeContextCurrent(window);
-    glfwSetKeyCallback(window, controls);
+    glfwSwapInterval(1);
+    
 
-    // Get info of GPU and supported OpenGL version
-    printf("Renderer: %s\n", glGetString(GL_RENDERER));
-    printf("OpenGL version supported %s\n", glGetString(GL_VERSION));
-
-    glEnable(GL_DEPTH_TEST); // Depth Testing
-    glDepthFunc(GL_LEQUAL);
-    glDisable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    return window;
-}
-
-void drawCube()
-{
-    GLfloat vertices[] =
-    {
-        -1, -1, -1,   -1, -1,  1,   -1,  1,  1,   -1,  1, -1,
-        1, -1, -1,    1, -1,  1,    1,  1,  1,    1,  1, -1,
-        -1, -1, -1,   -1, -1,  1,    1, -1,  1,    1, -1, -1,
-        -1,  1, -1,   -1,  1,  1,    1,  1,  1,    1,  1, -1,
-        -1, -1, -1,   -1,  1, -1,    1,  1, -1,    1, -1, -1,
-        -1, -1,  1,   -1,  1,  1,    1,  1,  1,    1, -1,  1
-    };
-
-    GLfloat colors[] =
-    {
-        0, 0, 0,   0, 0, 1,   0, 1, 1,   0, 1, 0,
-        1, 0, 0,   1, 0, 1,   1, 1, 1,   1, 1, 0,
-        0, 0, 0,   0, 0, 1,   1, 0, 1,   1, 0, 0,
-        0, 1, 0,   0, 1, 1,   1, 1, 1,   1, 1, 0,
-        0, 0, 0,   0, 1, 0,   1, 1, 0,   1, 0, 0,
-        0, 0, 1,   0, 1, 1,   1, 1, 1,   1, 0, 1
-    };
-
-    static float alpha = 0;
-    //attempt to rotate cube
-    glRotatef(alpha, 0, 1, 0);
-
-    /* We have a color array and a vertex array */
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    glVertexPointer(3, GL_FLOAT, 0, vertices);
-    glColorPointer(3, GL_FLOAT, 0, colors);
-
-    /* Send data : 24 vertices */
-    glDrawArrays(GL_QUADS, 0, 24);
-
-    /* Cleanup states */
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    alpha += 1;
-}
-
-
-void SetCursorPosition(int XPos, int YPos) {
-    printf("\033[%d;%dH",YPos+1,XPos+1);
-}
-
-void display( GLFWwindow* window )
-{
-    while(!glfwWindowShouldClose(window))
-    {
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-
-
-        // Scale to window size
-        GLint windowWidth, windowHeight;
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
-        glViewport(0, 0, windowWidth, windowHeight);
-
-        // Draw stuff
-        glClearColor(0.0, 0.8, 0.3, 1.0);
+    
+    while(!glfwWindowShouldClose(window)) {
+        // Render commands
+        glClearColor(0.188f, 0.188f, 0.188f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glMatrixMode(GL_PROJECTION_MATRIX);
-        glLoadIdentity();
-        gluPerspective( 60, (double)windowWidth / (double)windowHeight, 0.1, 100 );
 
-        glMatrixMode(GL_MODELVIEW_MATRIX);
-        glTranslatef(0,0,-5);
 
-        drawCube();
 
-        // Update Screen
+
+        // Swap front buffer w/ back buffer
         glfwSwapBuffers(window);
-
-        // Check for any input, or window movement
+        // Checks if any events has been triggered like key press
         glfwPollEvents();
     }
-}
 
-int main(int argc, char** argv)
-{
-    GLFWwindow* window = initWindow(1024, 620);
-    if( NULL != window )
-    {
-        display( window );
-    }
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
