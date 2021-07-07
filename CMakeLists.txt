@@ -40,6 +40,7 @@ list(APPEND SOURCES
     src/main.cpp
     src/ParticleSystem.h
     src/ParticleSystem.cpp
+    src/callbacks.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCES})
 
