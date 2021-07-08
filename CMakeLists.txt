@@ -26,15 +26,18 @@ if(!GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif()
 
 
-# CHECK ALL SUBMODULES
+# CHECK SUBMODULES
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/lib/glfw/CMakeLists.txt")
     message(FATAL_ERROR "Submodule glfw is required for this build!")
 endif()
 
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/lib/glm/CMakeLists.txt")
+    message(FATAL_ERROR "Submodule glm is required for this build!")
+endif()
 
 # Add subdirectories
 add_subdirectory(lib/glfw)
-
+add_subdirectory(lib/glm)
 
 list(APPEND SOURCES
     src/main.cpp
@@ -57,7 +60,7 @@ endif()
 # Include dirs
 target_include_directories(${PROJECT_NAME}
     PUBLIC lib/glfw/include/
-    PUBLIC lib/glfw/deps/
+    PUBLIC lib/glm
 )
 
 
