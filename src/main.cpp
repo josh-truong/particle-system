@@ -1,10 +1,13 @@
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include <linmath.h>
+
 #include <cstdio>
+#include <glm/glm.hpp>
+
 
 void error_callback(int error, const char* description)
 {
@@ -77,11 +80,8 @@ int main(int argc, const char** argv)
     glfwSetErrorCallback(error_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-
-
     // glfwSwapInterval(1);
-    // Missing glad
+
 
     // Build and compile shader program
     // -----------------------------
@@ -130,46 +130,44 @@ int main(int argc, const char** argv)
 
     // Setup vertex data, buffer, and configure vertex attributes
     // ------------------------------------------
-    float vertices[] = {
-         0.5f,  0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
+    float triangle1[] = {
+        -1.0f, -0.5f, 0.0f,
+         0.0f, -0.5f, 0.0f,
         -0.5f,  0.5f, 0.0f
     };
-    unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3
+
+
+    float triangle2[] = {
+         1.0f, -0.5f, 0.0f,
+         0.0f, -0.5f, 0.0f,
+         0.5f,  0.5f, 0.0f
     };
+
+    unsigned int VBOs[2], VAOs[2];
+    /* glGen == glGenerate */
+    glGenBuffers(2, VBOs);
+    glGenVertexArrays(2, VAOs);
     
-    /* Vertex Buffer Object 
-        Vertex data is now stored within the memory of the GPU and managed by variable VBO
-    */
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    // Triangle 1
+    glBindVertexArray(VAOs[0]); // Make VAO active
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]); // Make VBO active, by initializing it
 
-    // 0. Bind VAO
-    glBindVertexArray(VAO);
 
-    // 1. bind and set vertex buffers
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangle1), triangle1, GL_STATIC_DRAW); // Copy information about vertex into buffer
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0); // Add information about how to interpret vertex array
+    glEnableVertexAttribArray(0); // Enable vertex attribute and give vertex attribute location as arg
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    /*  2. Set the vertex attributes pointers
-        Input data is now sent to GPU and instructed the GPU how it should process the vertex
-        data within a vertex and fragment shader. But OpenGL does not know how to interpret
-        the vertex data in memory and how to connect the vertex data to the shader's attribute.
-    */
+    // Triangle 2
+    glBindVertexArray(VAOs[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangle2), triangle2, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // Unbind VBO
+    
+    // Unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // Unbind VAO
     glBindVertexArray(0);
+
 
     while(!glfwWindowShouldClose(window)) {
         // Render commands
@@ -181,10 +179,13 @@ int main(int argc, const char** argv)
             Every shader and rendering call after glUseProgram will now use this program object.
         */
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(VAOs[0]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glBindVertexArray(VAOs[1]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
 
 
         // Swap front buffer w/ back buffer
@@ -194,8 +195,8 @@ int main(int argc, const char** argv)
     }
 
     // Deallocate resources
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, VAOs);
+    glDeleteBuffers(1, VBOs);
     glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
