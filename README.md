@@ -11,7 +11,8 @@
     git rm -rf external/glm
     git submodule add https://github.com/g-truc/glm.git external/glm
   ```
-    
+
+---
 ### Configure
 ```
     sh ./configure.sh
