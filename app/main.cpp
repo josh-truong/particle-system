@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include "ParticleSystem.h"
+#include "Shader.h"
 
 void error_callback(int error, const char* description)
 {

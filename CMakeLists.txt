@@ -39,13 +39,12 @@ endif()
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
+
 list(APPEND SOURCES
-    src/main.cpp
-    src/ParticleSystem.h
-    src/ParticleSystem.cpp
-    src/Callbacks.cpp
+    app/main.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCES})
+
 
 # OS specific
 if(UNIX)
@@ -59,6 +58,7 @@ endif()
 
 # Include dirs
 target_include_directories(${PROJECT_NAME}
+    PUBLIC include/    
     PUBLIC external/glfw/include/
     PUBLIC external/glm
 )
@@ -66,6 +66,7 @@ target_include_directories(${PROJECT_NAME}
 
 # Source dirs
 target_include_directories(${PROJECT_NAME}
+    PRIVATE src/    
     PRIVATE external/glfw/src/
 )
 
