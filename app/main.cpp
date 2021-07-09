@@ -40,26 +40,6 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-const char *vertexShaderSource =
-"#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aColor;\n"
-"out vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos, 1.0);\n"
-"   ourColor = aColor;\n"
-"}\0";
-
-const char *fragmentShaderSource =
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"in vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(ourColor, 1.0);\n"
-"}\0";
-
 
 int main(int argc, const char** argv)
 {
@@ -90,49 +70,6 @@ int main(int argc, const char** argv)
     // glfwSwapInterval(1);
     // Missing glad
 
-    // Build and compile shader program
-    // -----------------------------
-    /* Vertex Shader */
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    /* Check for compilation error for vertex shader */
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
-    }
-
-
-    /* Fragment Shader */
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    /* Check for compilation error for fragment shader */
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
-    }
-
-
-    /* Link shaders */
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    /* Check for linking errors */
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        printf("ERROR::SHADER:LINKING::COMPILATION_FAILED\n%s\n", infoLog);
-    }
-
-    /* Delete Shader objects after linking to program */
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 
 
     // Setup vertex data, buffer, and configure vertex attributes
@@ -175,8 +112,9 @@ int main(int argc, const char** argv)
     // Unbind VAO
     glBindVertexArray(0);
 
-    
-
+    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/shader.vs";
+    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/shader.fs";
+    Shader ourShader(vertexPath, fragmentPath);
     while(!glfwWindowShouldClose(window)) {
         // Render commands
         glClearColor(0.188f, 0.188f, 0.188f, 1.0f);
@@ -186,8 +124,8 @@ int main(int argc, const char** argv)
             Result of linking shaders is a program object.
             Every shader and rendering call after glUseProgram will now use this program object.
         */
-        glUseProgram(shaderProgram);
 
+        ourShader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -201,7 +139,6 @@ int main(int argc, const char** argv)
     // Deallocate resources
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
     glfwTerminate();
