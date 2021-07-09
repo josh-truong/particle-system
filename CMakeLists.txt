@@ -40,10 +40,19 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
 
-list(APPEND SOURCES
-    app/main.cpp
+
+list(APPEND HEADER_FILES
+    "include/ParticleSystem.h"
+    "include/Shader.h"
 )
-add_executable(${PROJECT_NAME} ${SOURCES})
+list(APPEND SOURCE
+    "src/ParticleSystem.cpp"
+    "src/Shader.cpp"
+)
+list(APPEND APP
+    "app/main.cpp"
+)
+add_executable(${PROJECT_NAME} ${APP} ${HEADER_FILES} ${SOURCE})
 
 
 # OS specific
@@ -58,7 +67,7 @@ endif()
 
 # Include dirs
 target_include_directories(${PROJECT_NAME}
-    PUBLIC include/    
+    PUBLIC include/
     PUBLIC external/glfw/include/
     PUBLIC external/glm
 )
@@ -66,7 +75,7 @@ target_include_directories(${PROJECT_NAME}
 
 # Source dirs
 target_include_directories(${PROJECT_NAME}
-    PRIVATE src/    
+    PRIVATE src/
     PRIVATE external/glfw/src/
 )
 
