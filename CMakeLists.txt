@@ -9,7 +9,7 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 
-# Download SUBMODULES
+# Download Submodules
 find_package(GIT QUIET)
 if(!GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 # UPDATE SUBMODULES
@@ -20,7 +20,7 @@ if(!GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         RESULT_VARIABLE GIT_SUBMOD_RESULT)
         if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}")
+            message(FATAL_ERROR "git submodule update --init -recursive failed with ${GIT_SUBMOD_RESULT}")
         endif()
     endif()
 endif()
@@ -44,10 +44,12 @@ add_subdirectory(external/glm)
 list(APPEND HEADER_FILES
     "include/ParticleSystem.h"
     "include/Shader.h"
+    "include/stb_image.h"
 )
 list(APPEND SOURCE
     "src/ParticleSystem.cpp"
     "src/Shader.cpp"
+    "src/stb_image.cpp"
 )
 list(APPEND APP
     "app/main.cpp"

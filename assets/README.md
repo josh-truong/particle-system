@@ -46,3 +46,16 @@
     - uniforms are passed our application on the cpu to the shaders on the gpu
     - uniforms are global, unique per shader program.
     - uniforms will keep their values until reset or updated
+
+- Textures
+  - Texture Wrapping
+    - GL_REPEAT, GL_MIRRORED_REPEAT, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER
+  - Texture filtering
+    - GL_NEAREST, GL_LINEAR
+  - Mipmaps
+    ![image](images/mipmapped_texture.png)
+    - Mipmaps reduces resolution of texture images in order to save memory bandwidth on small objects
+    - After a certain distance threshold from the viewer, OpenGl will use a different mipmap texture that best suits the distance to the object
+    - Filtering methods for mipmap
+      - GL_NEAREST_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR
+    
