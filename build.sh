@@ -1,4 +1,4 @@
 #! /bin/bash
 
-cd out/build;
+cd build;
 make

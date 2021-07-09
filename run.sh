@@ -1,3 +1,3 @@
 #! /bin/bash
 
-cd out/build ; ./particle-system
+cd build ; ./particle-system

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.3)
+cmake_minimum_required(VERSION 3.20.0)
 project(particle-system C CXX)
 set(CMAKE_CXX_STANDARD 14)
 
@@ -27,23 +27,23 @@ endif()
 
 
 # CHECK SUBMODULES
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/lib/glfw/CMakeLists.txt")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/glfw/CMakeLists.txt")
     message(FATAL_ERROR "Submodule glfw is required for this build!")
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/lib/glm/CMakeLists.txt")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/glm/CMakeLists.txt")
     message(FATAL_ERROR "Submodule glm is required for this build!")
 endif()
 
 # Add subdirectories
-add_subdirectory(lib/glfw)
-add_subdirectory(lib/glm)
+add_subdirectory(external/glfw)
+add_subdirectory(external/glm)
 
 list(APPEND SOURCES
     src/main.cpp
     src/ParticleSystem.h
     src/ParticleSystem.cpp
-    src/callbacks.cpp
+    src/Callbacks.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCES})
 
@@ -59,14 +59,14 @@ endif()
 
 # Include dirs
 target_include_directories(${PROJECT_NAME}
-    PUBLIC lib/glfw/include/
-    PUBLIC lib/glm
+    PUBLIC external/glfw/include/
+    PUBLIC external/glm
 )
 
 
 # Source dirs
 target_include_directories(${PROJECT_NAME}
-    PRIVATE lib/glfw/src/
+    PRIVATE external/glfw/src/
 )
 
 
