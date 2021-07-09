@@ -188,8 +188,8 @@ int main(int argc, const char** argv)
     }
 
     // Deallocate resources
-    glDeleteVertexArrays(1, VAOs);
-    glDeleteBuffers(1, VBOs);
+    glDeleteVertexArrays(2, VAOs);
+    glDeleteBuffers(2, VBOs);
     glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
