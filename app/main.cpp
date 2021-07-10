@@ -73,8 +73,8 @@ int main(int argc, const char** argv)
 
 
 
-    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/shader.vs";
-    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/shader.fs";
+    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/vertex.glsl";
+    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/fragment.glsl";
     Shader ourShader(vertexPath, fragmentPath);
 
 
@@ -83,10 +83,10 @@ int main(int argc, const char** argv)
     // ------------------------------------------
     float vertices[] = {
         // Positions       // Colors         // texture coords
-         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f,
+         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f
+        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f
     };
     unsigned int indices[] = {
         0, 1, 3,
@@ -139,15 +139,15 @@ int main(int argc, const char** argv)
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int tex_width, tex_height, tex_nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/bts.jpeg",
+    unsigned char *data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/container.jpg",
                                     &tex_width, &tex_height, &tex_nrChannels, 0);
     if(data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height,
@@ -169,7 +169,7 @@ int main(int argc, const char** argv)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/bts_butter.png",
+    data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/awesomeface.png",
                                     &tex_width, &tex_height, &tex_nrChannels, 0);
     if(data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height,
