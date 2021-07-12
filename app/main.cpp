@@ -10,6 +10,8 @@
 #include "ParticleSystem.h"
 #include "Shader.h"
 
+float mixValue = 0.2;
+
 void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -22,6 +24,12 @@ void key_callback (GLFWwindow* window, int key, int scancode, int action, int mo
     switch(key) {
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
+            break;
+        case GLFW_KEY_UP:
+            (mixValue >= 1.0f) ? mixValue = 1.0f : mixValue += 0.1;
+            break;
+        case GLFW_KEY_DOWN:
+            (mixValue <= 0.0f) ? mixValue = 0.0f : mixValue -= 0.1;
             break;
         default:
             return;
@@ -65,16 +73,13 @@ int main(int argc, const char** argv)
     glfwSetErrorCallback(error_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-
-
-    // glfwSwapInterval(1);
+    glfwSwapInterval(1);
     // Missing glad
 
 
 
-    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/vertex.glsl";
-    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/fragment.glsl";
+    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/vertex.glsl";
+    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/fragment.glsl";
     Shader ourShader(vertexPath, fragmentPath);
 
 
@@ -83,10 +88,10 @@ int main(int argc, const char** argv)
     // ------------------------------------------
     float vertices[] = {
         // Positions       // Colors         // texture coords
-         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f,
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,
+         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f
+        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f
     };
     unsigned int indices[] = {
         0, 1, 3,
@@ -142,8 +147,8 @@ int main(int argc, const char** argv)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     int tex_width, tex_height, tex_nrChannels;
     stbi_set_flip_vertically_on_load(true);
@@ -166,6 +171,7 @@ int main(int argc, const char** argv)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+    // Minifying/magnifying filter
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -185,6 +191,7 @@ int main(int argc, const char** argv)
     ourShader.setInt_u1i("texture1", 0);
     ourShader.setInt_u1i("texture2", 1);
 
+    
     while(!glfwWindowShouldClose(window)) {
         // Render commands
         glClearColor(0.188f, 0.188f, 0.188f, 1.0f);
@@ -198,6 +205,8 @@ int main(int argc, const char** argv)
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+
+        ourShader.setFloat_u1f("mixValue", mixValue);
         
 
         ourShader.use();
