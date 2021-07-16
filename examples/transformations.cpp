@@ -3,12 +3,18 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 #include <cstdio>
 #include <math.h>
 #include <stb_image.h>
 
 #include "ParticleSystem.h"
 #include "Shader.h"
+
 
 void error_callback(int error, const char* description)
 {
@@ -22,6 +28,10 @@ void key_callback (GLFWwindow* window, int key, int scancode, int action, int mo
     switch(key) {
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
+            break;
+        case GLFW_KEY_UP:
+            break;
+        case GLFW_KEY_DOWN:
             break;
         default:
             return;
@@ -65,16 +75,13 @@ int main(int argc, const char** argv)
     glfwSetErrorCallback(error_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-
-
-    // glfwSwapInterval(1);
+    glfwSwapInterval(1);
     // Missing glad
 
 
 
-    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/shader.vs";
-    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/resources/ShaderCode/shader.fs";
+    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/vertex.glsl";
+    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/fragment.glsl";
     Shader ourShader;
     ourShader.InitShader(vertexPath, fragmentPath);
 
@@ -83,11 +90,11 @@ int main(int argc, const char** argv)
     // Setup vertex data, buffer, and configure vertex attributes
     // ------------------------------------------
     float vertices[] = {
-        // Positions       // Colors         // texture coords
-         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f
+        // Positions            // texture coords
+         0.5f,  0.5f, 0.0f,     1.0f, 1.0f,
+         0.5f, -0.5f, 0.0f,     1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f,     0.0f, 0.0f,
+        -0.5f,  0.5f, 0.0f,     0.0f, 1.0f
     };
     unsigned int indices[] = {
         0, 1, 3,
@@ -117,14 +124,11 @@ int main(int argc, const char** argv)
         the vertex data in memory and how to connect the vertex data to the shader's attribute.
     */
     // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // Color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(1);
     // texture coordinates
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // Unbind VBO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -148,7 +152,7 @@ int main(int argc, const char** argv)
 
     int tex_width, tex_height, tex_nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/bts.jpeg",
+    unsigned char *data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/container.jpg",
                                     &tex_width, &tex_height, &tex_nrChannels, 0);
     if(data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height,
@@ -167,10 +171,11 @@ int main(int argc, const char** argv)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
+    // Minifying/magnifying filter
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/bts_butter.png",
+    data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/awesomeface.png",
                                     &tex_width, &tex_height, &tex_nrChannels, 0);
     if(data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height,
@@ -186,6 +191,7 @@ int main(int argc, const char** argv)
     ourShader.SetInt1("texture1", 0);
     ourShader.SetInt1("texture2", 1);
 
+    
     while(!glfwWindowShouldClose(window)) {
         // Render commands
         glClearColor(0.188f, 0.188f, 0.188f, 1.0f);
@@ -199,10 +205,24 @@ int main(int argc, const char** argv)
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
-        
 
-        ourShader.Use();
+        glm::mat4 transform = glm::mat4(1.0f);
+        // Container 1
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
+        // Draw container 1
         glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+        // Container 2
+        transform = glm::mat4(1.0f);
+        transform = glm::scale(transform, glm::vec3(0.5f, 0.5f, 0.5f));
+        transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.0f));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 

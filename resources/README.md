@@ -58,4 +58,6 @@
     - After a certain distance threshold from the viewer, OpenGl will use a different mipmap texture that best suits the distance to the object
     - Filtering methods for mipmap
       - GL_NEAREST_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_NEAREST, GL_NEAREST_MIPMAP_LINEAR, GL_LINEAR_MIPMAP_LINEAR
-    
+- Transformations
+  - Since matrix multiplication is non-commutative, the order of matrix matters
+    - It is advised to do: (1) scaling operations, (2) rotations, and (3) transformations

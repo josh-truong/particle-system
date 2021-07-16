@@ -52,7 +52,8 @@ list(APPEND SOURCE
     "src/stb_image.cpp"
 )
 list(APPEND APP
-    "app/main.cpp"
+    # "app/main.cpp"
+    "app/mainSys.cpp"
 )
 add_executable(${PROJECT_NAME} ${APP} ${HEADER_FILES} ${SOURCE})
 

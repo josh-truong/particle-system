@@ -1,41 +1,63 @@
 #ifndef PARTICLESYSTEM_H
 #define PARTICLESYSTEM_H
 
+#define GL_GLEXT_PROTOTYPES
+#include <GL/gl.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <glm/gtc/constants.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/compatibility.hpp>
+
+#include "ParticleSystem.h"
+#include "Shader.h"
+
 #include <cstdio>
 #include <vector>
 
-struct ParticleProps
+struct ParticleSettings
 {
-    // Position
-    // Velocity, velocity variation
-    // Color begin, color end
-    // Size begin, size end, size variation
-    // lifetime
+    glm::vec2 position;
+    glm::vec2 velocity, velocity_variation;
+    glm::vec4 color_start, color_finish;
+    float size_begin, size_finish, size_variation;
+    float lifespan;
 };
-struct Particle {
-    // Position
-    // Velocity
-    // Starting/ending color
-    // rotation
-    // Starting/ending size
-    // Lifetime
-    // Remaining time
-    // Alive/dead
-};
-
 class ParticleSystem
 {
     private:
-        // ?? Do not forget to start rendering particles at the end of vector in order to prevent misindexing
-        // Set a contiguous block of memory and use  modulo for circular queue(data structure)
-        std::vector<Particle> n_particles;
+        struct Particle
+        {
+            glm::vec2 position;
+            glm::vec2 velocity;
+            glm::vec4 color_start, color_finish;
+            float size_begin, size_finish;
+            float lifespan, lifespan_remaining;
+            float rotation;
+
+            bool active;
+        };
+
+        int pool_size, curr_idx;
+        std::vector<Particle> particle_pool;
         
+        Shader particle_shader;
+        GLuint VBO, VAO, EBO;
+
     public:
-        // Update
-        // render
-        // emit
-
-
+        
+        ParticleSystem();
+        ~ParticleSystem();
+        
+        void InitParticle(ParticleSettings &settings);
+        void RenderParticle();
+        void UpdateParticle();
+        
 };
 
 

@@ -3,7 +3,19 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 #include <cstdio>
+#include <math.h>
+#include <stb_image.h>
+
+#include "ParticleSystem.h"
+#include "Shader.h"
+
+float mixValue = 0.2;
 
 void error_callback(int error, const char* description)
 {
@@ -17,6 +29,12 @@ void key_callback (GLFWwindow* window, int key, int scancode, int action, int mo
     switch(key) {
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
+            break;
+        case GLFW_KEY_UP:
+            (mixValue >= 1.0f) ? mixValue = 1.0f : mixValue += 0.1;
+            break;
+        case GLFW_KEY_DOWN:
+            (mixValue <= 0.0f) ? mixValue = 0.0f : mixValue -= 0.1;
             break;
         default:
             return;
@@ -36,22 +54,6 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-const char *vertexShaderSource =
-"#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
-
-const char *fragmentShaderSource =
-"#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}\0";
-
 
 int main(int argc, const char** argv)
 {
@@ -61,7 +63,7 @@ int main(int argc, const char** argv)
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow *window = window = glfwCreateWindow(640, 480, "Particle System", NULL, NULL);    
@@ -76,70 +78,31 @@ int main(int argc, const char** argv)
     glfwSetErrorCallback(error_callback);
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-
-
-    // glfwSwapInterval(1);
+    glfwSwapInterval(1);
     // Missing glad
 
-    // Build and compile shader program
-    // -----------------------------
-    /* Vertex Shader */
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    /* Check for compilation error for vertex shader */
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
-    }
 
 
-    /* Fragment Shader */
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    /* Check for compilation error for fragment shader */
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
-    }
+    const char* vertexPath = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/vertex.glsl";
+    const char* fragmentPath = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/fragment.glsl";
+    Shader ourShader;
+    ourShader.InitShader(vertexPath, fragmentPath);
 
-
-    /* Link shaders */
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    /* Check for linking errors */
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        printf("ERROR::SHADER:LINKING::COMPILATION_FAILED\n%s\n", infoLog);
-    }
-
-    /* Delete Shader objects after linking to program */
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 
 
     // Setup vertex data, buffer, and configure vertex attributes
     // ------------------------------------------
     float vertices[] = {
-         0.5f,  0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f
+        // Positions       // Colors         // texture coords
+         0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f
     };
     unsigned int indices[] = {
         0, 1, 3,
         1, 2, 3
     };
-    
     /* Vertex Buffer Object 
         Vertex data is now stored within the memory of the GPU and managed by variable VBO
     */
@@ -157,20 +120,84 @@ int main(int argc, const char** argv)
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     /*  2. Set the vertex attributes pointers
         Input data is now sent to GPU and instructed the GPU how it should process the vertex
         data within a vertex and fragment shader. But OpenGL does not know how to interpret
         the vertex data in memory and how to connect the vertex data to the shader's attribute.
     */
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    // Color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // texture coordinates
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     // Unbind VBO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     // Unbind VAO
     glBindVertexArray(0);
-    
 
+
+    // ------------------------- //
+    // load and create a texture //
+    // ------------------------- //
+    unsigned int texture1, texture2;
+    // Texture 1
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    int tex_width, tex_height, tex_nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/container.jpg",
+                                    &tex_width, &tex_height, &tex_nrChannels, 0);
+    if(data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height,
+                     0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        printf("Failed to load texture\n");
+    }
+    stbi_image_free(data);
+
+
+    // Texture 2
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Minifying/magnifying filter
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    data = stbi_load("/home/ubuntu/Documents/Github/particle-system/assets/texture/awesomeface.png",
+                                    &tex_width, &tex_height, &tex_nrChannels, 0);
+    if(data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_width, tex_height,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        printf("Failed to load texture\n");
+    }
+    stbi_image_free(data);
+
+
+    ourShader.Use();
+    ourShader.SetInt1("texture1", 0);
+    ourShader.SetInt1("texture2", 1);
+
+    
     while(!glfwWindowShouldClose(window)) {
         // Render commands
         glClearColor(0.188f, 0.188f, 0.188f, 1.0f);
@@ -180,10 +207,16 @@ int main(int argc, const char** argv)
             Result of linking shaders is a program object.
             Every shader and rendering call after glUseProgram will now use this program object.
         */
-        glUseProgram(shaderProgram);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
+        ourShader.SetFloat1("mixValue", mixValue);
+        
+
+        ourShader.Use();
         glBindVertexArray(VAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
@@ -197,9 +230,9 @@ int main(int argc, const char** argv)
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
     glfwTerminate();
+
     return 0;
 }

@@ -10,7 +10,12 @@
 
 #include "Shader.h"
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader()
+{
+
+}
+
+void Shader::InitShader(const char* vertexPath, const char* fragmentPath)
 {
     std::string vertexCode, fragmentCode;
     std::ifstream vShaderFile, fShaderFile;
@@ -76,24 +81,28 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     glDeleteShader(fragment);
 }
 
-Shader::~Shader() {
+Shader::~Shader()
+{
     printf("Deallocating shader program\n");
     glDeleteProgram(ID);
 }
 
-void Shader::use()
+void Shader::Use()
 {
     glUseProgram(ID);
 }
 
-void Shader::setBool_u1i(const std::string &name, bool value) const {
+void Shader::SetBool1(const std::string &name, bool value) const
+{
     glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
 }
 
-void Shader::setInt_u1i(const std::string &name, int value) const {
+void Shader::SetInt1(const std::string &name, int value) const
+{
     glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
 }
 
-void Shader::setFloat_u1f(const std::string &name, float value) const {
+void Shader::SetFloat1(const std::string &name, float value) const
+{
     glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }
