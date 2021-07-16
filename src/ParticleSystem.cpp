@@ -16,11 +16,10 @@
 
 #include <cstdio>
 #include <vector>
-#include <iostream>
 
 ParticleSystem::ParticleSystem()
 {
-    pool_size = 1;
+    pool_size = 1000;
     curr_idx = 0;
     particle_pool.resize(pool_size);
     
@@ -121,9 +120,9 @@ void ParticleSystem::RenderParticle()
 
         glm::mat4 transform = glm::mat4(1.0f);
         // printf("xpos: %f, ypos: %f\n", particle.position.x, particle.position.y);
-        transform = glm::scale(glm::mat4(1.0f), glm::vec3(size, size, 1.0f))
-                    * glm::translate(glm::mat4(1.0f), glm::vec3(particle.position, 0.0f))
-                    * glm::rotate(glm::mat4(1.0f), particle.rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::translate(glm::mat4(1.0f), glm::vec3(particle.position, 0.0f))
+                    * glm::rotate(glm::mat4(1.0f), particle.rotation, glm::vec3(0.0f, 0.0f, 1.0f))
+                    * glm::scale(glm::mat4(1.0f), glm::vec3(size, size, 1.0f));
         unsigned int transformLoc = glGetUniformLocation(particle_shader.ID, "transform");
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -144,15 +143,15 @@ void ParticleSystem::UpdateParticle()
         float timestep = 0.01;
         particle.lifespan_remaining -= timestep;
         particle.position += particle.velocity * timestep;
-        particle.rotation += 0.5f * timestep;
+        particle.rotation += 10.0f * timestep;
 
-        // printf("x: %f y: %f vel_x: %f vel_y: %f size_begin: %f size_finish: %f lifespan: %f lifespan_remaining: %f rotation: %f active: %d\n",
+        
+        // printf("x: %f y: %f vel_x: %f vel_y: %f size_begin: %f size_finish: %f lifespan: %f lifespan_remaining: %f rotation: %f\n",
         //     particle.position.x, particle.position.y,
         //     particle.velocity.x, particle.velocity.y,
         //     particle.size_begin, particle.size_finish,
         //     particle.lifespan, particle.lifespan_remaining,
-        //     particle.rotation,
-        //     particle.active
+        //     particle.rotation
         // );
     }
 }

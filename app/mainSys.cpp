@@ -80,8 +80,8 @@ int main(int argc, const char** argv)
     settings.color_finish = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
     settings.size_begin = 0.1f;
     settings.size_finish = 0.01f;
-    settings.size_variation = 0.1f;
-    settings.lifespan = 1.0f;
+    settings.size_variation = 0.05f;
+    settings.lifespan = 0.5f;
 
 
     while(!glfwWindowShouldClose(window)) {
