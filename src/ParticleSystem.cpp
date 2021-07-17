@@ -143,7 +143,7 @@ void ParticleSystem::UpdateParticle()
         float timestep = 0.01;
         particle.lifespan_remaining -= timestep;
         particle.position += particle.velocity * timestep;
-        particle.rotation += 10.0f * timestep;
+        particle.rotation += 5.0f * timestep;
 
         
         // printf("x: %f y: %f vel_x: %f vel_y: %f size_begin: %f size_finish: %f lifespan: %f lifespan_remaining: %f rotation: %f\n",

@@ -81,7 +81,7 @@ int main(int argc, const char** argv)
     settings.size_begin = 0.1f;
     settings.size_finish = 0.01f;
     settings.size_variation = 0.05f;
-    settings.lifespan = 0.5f;
+    settings.lifespan = 0.7f;
 
 
     while(!glfwWindowShouldClose(window)) {
