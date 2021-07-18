@@ -40,20 +40,17 @@ add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 
 
-
 list(APPEND HEADER_FILES
+    "include/Callbacks.h"
     "include/ParticleSystem.h"
     "include/Shader.h"
-    "include/stb_image.h"
 )
 list(APPEND SOURCE
     "src/ParticleSystem.cpp"
     "src/Shader.cpp"
-    "src/stb_image.cpp"
 )
 list(APPEND APP
-    # "app/main.cpp"
-    "app/mainSys.cpp"
+    "app/main.cpp"
 )
 add_executable(${PROJECT_NAME} ${APP} ${HEADER_FILES} ${SOURCE})
 

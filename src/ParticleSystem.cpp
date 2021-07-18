@@ -72,11 +72,18 @@ void ParticleSystem::RenderParticle(WindowInfo &window_info)
     int width = window_info.width;
     int height = window_info.height;
     if (!VBO) {
+        // ---------------------- //
+        // Initilize Shader Class //
+        // ---------------------- //
         const char* vertex_path = "/home/ubuntu/Documents/Github/particle-system/assets/ParticleShaderCode/vertex.glsl";
         const char* fragment_path = "/home/ubuntu/Documents/Github/particle-system/assets/ParticleShaderCode/fragment.glsl";
         particle_shader.InitShader(vertex_path, fragment_path);
 
+        // ---------------------------------------------------------- //
+        // Setup vertex data, buffer, and configure vertex attributes //
+        // ---------------------------------------------------------- //
         float vertices[] = {
+            // Position
              0.5f,  0.5f, 0.0f,
              0.5f, -0.5f, 0.0f,
             -0.5f, -0.5f, 0.0f,
@@ -87,26 +94,54 @@ void ParticleSystem::RenderParticle(WindowInfo &window_info)
             1, 2, 3
         };
 
+        // Goal: Let VBO store and manage vertex data in GPU memory
+        /* Generate Vertex Arrays and Buffer Objects */
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glGenBuffers(1, &EBO);
 
-        glBindVertexArray(VAO);
+        /* Bind vertex array and buffers */
+        glBindVertexArray(VAO);                     // Make VAO active
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);         // Make VBO active
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // Make EBO active
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        /* Set vertex buffer */
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);       // Copy information about vertex into buffer
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // Copy information about vertex into buffer
 
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        /* Set Vertex Array Attributes Pointer 
+            Input data is now sent to GPU and instructs the GPU how it should process the vertex
+            data within a vertex and fragment shader.
+            OpenGL does not know how to interpret the vertex data in memory nor how to connect the vertex data to the shader's attribute.
+            In order for OpenGl to know where the vertex attribute pointer is we must tell the vertex attribute index, size, type size, stride, and pointer
 
+            // Example
+                      | --------- Vertex 1 --------- | --------- Vertex 2 -------- |
+                      | x   y   z |  R  G  B |  S  T |  x  y  z |  R  G  B |  S  T |
+                Byte  | 0   4   8 | 12 16 20 | 24 28 | 32 36 40 | 44 48 52 | 56 60 |
+            Position  |<-------- Stride: 32 -------->|          |          |
+         Offset: 0 -> |           |          |                  |          |
+               Color  |           |<-------- Stride: 32 ------->|          |
+                    Offset: 12 -> |          |                             |
+             Texture                         |<-------- Stride: 32 ------->|
+                               Offset: 24 -> |        
+        */
+
+        // Position Attribute
+        /* Tell OpenGl how to interpret vertex array
+            INDEX = 0, SIZE = 3, TYPE = FLOAT
+            STRIDE = 3 * FLOAT, OFFSET = 0
+        */
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(0); // Enable vertex attribute given location
 
+        // Unbind VBO & VAO
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
-
+    // Bind vertex array and use shader class
     glBindVertexArray(VAO);
+    // Every shader and rendering call after glUseProgram will now use this program object.
     particle_shader.Use();
 
     // ---------------------------- //
@@ -114,6 +149,7 @@ void ParticleSystem::RenderParticle(WindowInfo &window_info)
         if(!particle.active)
             continue;
 
+        // Get uniform location from shader program using glGetUniformLocation
         unsigned int vertexColorLocation = glGetUniformLocation(particle_shader.ID, "particleColor");
         unsigned int transformLoc = glGetUniformLocation(particle_shader.ID, "transform");
 

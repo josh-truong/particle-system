@@ -49,34 +49,41 @@ void Shader::InitShader(const char* vertexPath, const char* fragmentPath)
     int success;
     char infoLog[512];
 
+    // Create Vertex Shader
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
+    // Check compilation for errors
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
         printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
     }
 
+    // Create Fragment Shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fShaderCode, NULL);
     glCompileShader(fragment);
+    // Check compilation for errors
     glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragment, 512, NULL, infoLog);
         printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
     }
 
+    // Attach and Link Shaders
     ID = glCreateProgram();
     glAttachShader(ID, vertex);
     glAttachShader(ID, fragment);
     glLinkProgram(ID);
+    // Check compilation for errors
     glGetProgramiv(ID, GL_LINK_STATUS, &success);
     if(!success) {
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
         printf("ERROR::SHADER:PROGRAM::LINKING_FAILED\n%s\n", infoLog);
     }
 
+    // Delete Shaders
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 }
