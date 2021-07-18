@@ -28,6 +28,11 @@ struct ParticleSettings
     float size_begin, size_finish, size_variation;
     float lifespan;
 };
+
+struct WindowInfo
+{
+    int width, height;
+};
 class ParticleSystem
 {
     private:
@@ -55,8 +60,8 @@ class ParticleSystem
         ~ParticleSystem();
         
         void InitParticle(ParticleSettings &settings);
-        void RenderParticle();
-        void UpdateParticle();
+        void RenderParticle(WindowInfo &window_info);
+        void UpdateParticle(float timestep);
         
 };
 

@@ -43,9 +43,13 @@ void ParticleSystem::InitParticle(ParticleSettings &settings)
     Particle &particle = particle_pool[curr_idx];
     particle.position = settings.position;
 
-    particle.velocity = settings.velocity;
-    particle.velocity.x += fmod(rand(), settings.velocity_variation.x);
-    particle.velocity.y += fmod(rand(), settings.velocity_variation.y);
+    
+    particle.rotation = rand() % 360 + (-360);
+    particle.velocity = settings.velocity 
+                        + glm::vec2(fmod(rand(), settings.velocity_variation.x), 
+                                    fmod(rand(), settings.velocity_variation.y));
+    particle.velocity = glm::vec2(particle.velocity.x * cos(particle.rotation),
+                                    particle.velocity.y * sin(particle.rotation));
 
     particle.color_start = settings.color_start;
     particle.color_finish = settings.color_finish;
@@ -63,11 +67,13 @@ void ParticleSystem::InitParticle(ParticleSettings &settings)
     curr_idx = (curr_idx % pool_size);
 }
 
-void ParticleSystem::RenderParticle()
+void ParticleSystem::RenderParticle(WindowInfo &window_info)
 {
+    int width = window_info.width;
+    int height = window_info.height;
     if (!VBO) {
-        const char* vertex_path = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/vertex.glsl";
-        const char* fragment_path = "/home/ubuntu/Documents/Github/particle-system/assets/ShaderCode/fragment.glsl";
+        const char* vertex_path = "/home/ubuntu/Documents/Github/particle-system/assets/ParticleShaderCode/vertex.glsl";
+        const char* fragment_path = "/home/ubuntu/Documents/Github/particle-system/assets/ParticleShaderCode/fragment.glsl";
         particle_shader.InitShader(vertex_path, fragment_path);
 
         float vertices[] = {
@@ -108,28 +114,30 @@ void ParticleSystem::RenderParticle()
         if(!particle.active)
             continue;
 
-        // Color
-        glm::vec3 color = glm::lerp(particle.color_start,
-                                    particle.color_finish,
-                                    particle.lifespan_remaining);
         unsigned int vertexColorLocation = glGetUniformLocation(particle_shader.ID, "particleColor");
-        glUniform3f(vertexColorLocation, color.x, color.y, color.z);
-
-        // Size
-        float size = glm::lerp(particle.size_begin, particle.size_finish, particle.lifespan - particle.lifespan_remaining);
-
-        glm::mat4 transform = glm::mat4(1.0f);
-        // printf("xpos: %f, ypos: %f\n", particle.position.x, particle.position.y);
-        transform = glm::translate(glm::mat4(1.0f), glm::vec3(particle.position, 0.0f))
-                    * glm::rotate(glm::mat4(1.0f), particle.rotation, glm::vec3(0.0f, 0.0f, 1.0f))
-                    * glm::scale(glm::mat4(1.0f), glm::vec3(size, size, 1.0f));
         unsigned int transformLoc = glGetUniformLocation(particle_shader.ID, "transform");
+
+        // Color
+        float life = 1.0f - (particle.lifespan_remaining/particle.lifespan);
+        glm::vec4 color = glm::lerp(particle.color_start,
+                                    particle.color_finish,
+                                    life);
+        glUniform4fv(vertexColorLocation, 1, glm::value_ptr(color));
+
+        // ------------ Transform ------------ //
+        // Size
+        float particle_size = glm::lerp(particle.size_begin, particle.size_finish, life);
+        glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, glm::vec3(particle.position, 0.0f))
+                    * glm::rotate(transform, particle.rotation, glm::vec3(0.0f, 0.0f, 1.0f))
+                    * glm::scale(transform, glm::vec3(particle_size, particle_size, 1.0f));
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 }
 
-void ParticleSystem::UpdateParticle()
+void ParticleSystem::UpdateParticle(float timestep)
 {
     for(auto& particle : particle_pool) {
         if(!particle.active)
@@ -140,19 +148,9 @@ void ParticleSystem::UpdateParticle()
             continue;
         }
 
-        float timestep = 0.01;
         particle.lifespan_remaining -= timestep;
         particle.position += particle.velocity * timestep;
-        particle.rotation += 5.0f * timestep;
-
-        
-        // printf("x: %f y: %f vel_x: %f vel_y: %f size_begin: %f size_finish: %f lifespan: %f lifespan_remaining: %f rotation: %f\n",
-        //     particle.position.x, particle.position.y,
-        //     particle.velocity.x, particle.velocity.y,
-        //     particle.size_begin, particle.size_finish,
-        //     particle.lifespan, particle.lifespan_remaining,
-        //     particle.rotation
-        // );
+        particle.rotation += 1.0f * timestep;
     }
 }
 

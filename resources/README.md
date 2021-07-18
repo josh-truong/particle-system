@@ -61,3 +61,11 @@
 - Transformations
   - Since matrix multiplication is non-commutative, the order of matrix matters
     - It is advised to do: (1) scaling operations, (2) rotations, and (3) transformations
+- Coordinate Systems
+  - Orthographic projection
+    - Should be used for 2d renderings, architectural/engineering applications
+  - Perspective projection
+    - 3d renderings
+  - Transformation Matrix
+    - V_clip = M_projection * M_view * M_model * V_local
+      - Read from right to left: local -> model -> view -> projection
