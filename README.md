@@ -1,5 +1,7 @@
 # particle-system
 
+![image](demo.png)
+
 ## Required Submodules
 - ### glfw
   ```

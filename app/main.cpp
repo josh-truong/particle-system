@@ -35,14 +35,14 @@ int main(int argc, const char** argv)
     ParticleSystem particle_trail;
     WindowInfo window_info;
     ParticleSettings settings;
-    settings.velocity = glm::vec2(0.1f, 0.1f);
+    settings.velocity = glm::vec2(0.2f, 0.2f);
     settings.velocity_variation = glm::vec2(0.1f, 0.1f);
     settings.color_start = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     settings.color_finish = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-    settings.size_begin = 0.15f;
+    settings.size_begin = 0.1f;
     settings.size_finish = 0.05f;
     settings.size_variation = 0.05f;
-    settings.lifespan = 2.0f;
+    settings.lifespan = 1.0f;
 
     double xpos, ypos;
     float timestep = 0.01;
